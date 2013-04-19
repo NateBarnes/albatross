@@ -1,4 +1,4 @@
-role :app, "ec2-174-129-158-241.compute-1.amazonaws.com"                          # This may be the same as your `Web` server
+role :app, "ec2-23-21-19-56.compute-1.amazonaws.com"
 
 set :application, "albatross"
 set :copy_strategy, :export
