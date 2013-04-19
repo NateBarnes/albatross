@@ -11,6 +11,44 @@ module FormatHelper
     n.to_s.gsub(/(\d)(?=(\d\d\d)+(?!\d))/, '\\1,')
   end
   module_function :humanize_number
+
+  def get_reg opts
+    proc do
+      reg_num = 1
+      event_num = 0
+      while event_num == 0
+        registrations_left = DB.decr "event:#{reg_num}:limit"
+        if registrations_left < 0
+          DB.incr "event:#{reg_num}:limit"
+          reg_num +=1
+        else
+          event_num = reg_num
+        end
+      end
+
+      opts[:stream] << "event:\"#{reg_num}\""
+      opts[:reg_num] = reg_num
+      opts
+    end
+  end
+  module_function :get_reg
+
+  def get_reg_callback
+    proc do |opts|
+
+      EM.defer do
+        price = DB.get "event:#{opts[:reg_num]}:price"
+        opts[:stream] << ", price:\"#{price}\""
+      end
+
+      EM.defer do
+        desc = DB.get "event:#{opts[:reg_num]}:desc"
+        opts[:stream] << ", desc:\"#{desc}\""
+      end
+
+    end
+  end
+  module_function :get_reg_callback
 end
 
 class App < E
@@ -21,19 +59,28 @@ class App < E
     content_type 'text/event-stream'
   end
 
-  def event
+  def index
     stream :keep_open do |stream|
-
-      # communicate to client every 15 seconds
-      timer = EM.add_periodic_timer(15) {stream << "\0"}
 
       stream.errback do      # when connection closed/errored:
         DB.decr :connections # 1. decrement connections amount by 1
-        timer.cancel         # 2. cancel timer that communicate to client
       end
       
       # increment connections amount by 1
       DB.incr :connections
+
+      
+      
+
+      
+
+      EM.defer FormatHelper.get_reg(stream: stream), FormatHelper.get_reg_callback
+
+      # EM.defer do
+      #   desc = DB.get "event:#{reg_num}:desc"
+      #   stream << ", description: #{desc}"
+      # end
+
     end
   end
 
