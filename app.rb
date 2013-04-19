@@ -17,11 +17,11 @@ class App < E
   map '/'
 
   # index and status_watcher actions should return event-stream content type
-  before :index, :status_watcher do
+  before :event, :status_watcher do
     content_type 'text/event-stream'
   end
 
-  def index
+  def event
     stream :keep_open do |stream|
 
       # communicate to client every 15 seconds
