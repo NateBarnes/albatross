@@ -4,5 +4,5 @@ gem "capistrano"
 gem "e"
 gem "eventmachine"
 gem "hiredis"
-gem "redis"
+gem "redis", :require => ["redis", "redis/connection/hiredis"]
 gem "rainbows"
