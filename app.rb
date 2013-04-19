@@ -21,7 +21,7 @@ class App < E
     content_type 'text/event-stream'
   end
 
-  def event
+  def index
     stream :keep_open do |stream|
 
       # communicate to client every 15 seconds
