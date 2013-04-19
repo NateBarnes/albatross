@@ -1,4 +1,4 @@
-role :app, "ec2-23-21-19-56.compute-1.amazonaws.com"
+role :app, "ec2-50-19-182-192.compute-1.amazonaws.com"
 
 set :application, "albatross"
 set :copy_strategy, :export
