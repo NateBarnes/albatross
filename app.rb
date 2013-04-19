@@ -10,7 +10,6 @@ module FormatHelper
   def humanize_number n
     n.to_s.gsub(/(\d)(?=(\d\d\d)+(?!\d))/, '\\1,')
   end
-  module_function :humanize_number
 
   def get_reg opts
     proc do
@@ -31,7 +30,6 @@ module FormatHelper
       opts
     end
   end
-  module_function :get_reg
 
   def get_reg_callback
     proc do |opts|
@@ -48,7 +46,8 @@ module FormatHelper
 
     end
   end
-  module_function :get_reg_callback
+  
+  module_function :humanize_number, :get_reg, :get_reg_callback
 end
 
 class App < E
