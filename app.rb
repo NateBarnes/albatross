@@ -11,7 +11,10 @@ module FormatHelper
   def humanize_number n
     n.to_s.gsub(/(\d)(?=(\d\d\d)+(?!\d))/, '\\1,')
   end
+  module_function :humanize_number
+end
 
+module WorkHelper
   def get_reg opts
     proc do
       reg_num = 1
@@ -21,11 +24,11 @@ module FormatHelper
         if registrations_left < 0
           DB.incr "event:#{reg_num}:limit"
           reg_num +=1
+          reg_num = 0 and break if reg_num > 7
         else
           event_num = reg_num
         end
       end
-
       opts[:stream] << "event:\"#{reg_num}\""
       opts[:reg_num] = reg_num
       opts
@@ -47,8 +50,8 @@ module FormatHelper
 
     end
   end
-  
-  module_function :humanize_number, :get_reg, :get_reg_callback
+
+  module_function :get_reg, :get_reg_callback
 end
 
 class App < E
@@ -68,19 +71,7 @@ class App < E
       
       # increment connections amount by 1
       DB.incr :connections
-
-      
-      
-
-      
-
-      EM.defer FormatHelper.get_reg(stream: stream), FormatHelper.get_reg_callback
-
-      # EM.defer do
-      #   desc = DB.get "event:#{reg_num}:desc"
-      #   stream << ", description: #{desc}"
-      # end
-
+      EM.defer WorkHelper.get_reg(stream: stream), WorkHelper.get_reg_callback
     end
   end
 
