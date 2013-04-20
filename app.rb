@@ -2,7 +2,7 @@ require 'bundler/setup'
 Bundler.require
 
 EventMachine.set_max_timers 1_250_000
-EventMachine.threadpool_size = 1_000
+EventMachine.threadpool_size = 50_000
 
 DB = Redis.new
 DB.set :connections, 0
