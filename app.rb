@@ -16,7 +16,6 @@ end
 class App < E
   map '/'
 
-  # index and status_watcher actions should return event-stream content type
   before :index, :status_watcher do
     content_type 'text/event-stream'
   end
@@ -24,11 +23,10 @@ class App < E
   def index
     stream :keep_open do |stream|
 
-      stream.errback do      # when connection closed/errored:
-        DB.decr :connections # 1. decrement connections amount by 1
+      stream.errback do
+        DB.decr :connections
       end
-      
-      # increment connections amount by 1
+
       DB.incr :connections
 
       EM.add_timer(1) do
@@ -41,6 +39,7 @@ class App < E
             reg_num +=1
           else
             event_num = reg_num
+            DB.incr "event:#{reg_num}:issued"
           end
         end
 
@@ -55,20 +54,33 @@ class App < E
     end
   end
 
-  # frontend for status watchers - http://localhost:5252/status
+  def register event_num, name="test_name"
+    stream :keep_open do |stream|
+
+      stream.errback do
+        DB.decr :connections
+      end
+
+      DB.incr :connections
+
+      EM.add_timer(1) do
+        DB.lpush "event:#{event_num}:registrations", name
+        stream << "event_num: #{event_num}"
+      end
+    end
+  end
+
   def status
     render
   end
 
-  # backend for status watchers
   def status_watcher
     stream :keep_open do |stream|
-      # adding a timer that will update status watchers every second
       timer = EM.add_periodic_timer(1) do
         connections = FormatHelper.humanize_number(DB.get :connections)
         stream << "data: %s\n\n" % connections
       end
-      stream.errback { timer.cancel } # cancel timer if connection closed/errored
+      stream.errback { timer.cancel }
     end
   end
 
