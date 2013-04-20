@@ -2,7 +2,6 @@ require 'bundler/setup'
 Bundler.require
 
 EventMachine.set_max_timers 1_250_000
-EventMachine.threadpool_size = 50_000
 
 DB = Redis.new
 DB.set :connections, 0
@@ -14,61 +13,11 @@ module FormatHelper
   module_function :humanize_number
 end
 
-class Reservation
-  include EM::Deferrable
-  attr_accessor :opts
-
-  def initialize opts
-    @opts = opts
-  end
-
-  def get_reg
-    puts "in worker"
-    reg_num = 1
-    event_num = 0
-    while event_num == 0
-      registrations_left = DB.decr "event:#{reg_num}:limit"
-      if registrations_left < 0
-        DB.incr "event:#{reg_num}:limit"
-        reg_num +=1
-        reg_num = 0 and break if reg_num > 7
-      else
-        event_num = reg_num
-      end
-    end
-    @opts[:stream] << "event:\"#{reg_num}\""
-    @opts[:reg_num] = reg_num
-    set_deferred_status :failed if reg_num > 7
-    succeed(@opts)
-  end
-end
-
-class PostReservation
-  include EM::Deferrable
-  attr_accessor :opts
-
-  def initialize opts
-    @opts = opts
-  end
-
-  def get_reg_callback
-    EM.defer do
-      price = DB.get "event:#{@opts[:reg_num]}:price"
-      @opts[:stream] << ", price:\"#{price}\""
-    end
-
-    EM.defer do
-      desc = DB.get "event:#{@opts[:reg_num]}:desc"
-      @opts[:stream] << ", desc:\"#{desc}\""
-    end
-  end
-end
-
 class App < E
   map '/'
 
   # index and status_watcher actions should return event-stream content type
-  before :event, :status_watcher do
+  before :index, :status_watcher do
     content_type 'text/event-stream'
   end
 
@@ -81,12 +30,28 @@ class App < E
       
       # increment connections amount by 1
       DB.incr :connections
-      puts "setting up worker"
-      worker = Reservation.new(:stream => stream)
-      puts "setting callbacks"
-      worker.callback { |opts| PostReservation.new(opts).get_reg_callback }
-      puts "starting reg"
-      worker.get_reg
+
+      EM.add_timer(1) do
+        reg_num = 1
+        event_num = 0
+        while event_num == 0
+          registrations_left = DB.decr "event:#{reg_num}:limit"
+          if registrations_left < 0
+            DB.incr "event:#{reg_num}:limit"
+            reg_num +=1
+          else
+            event_num = reg_num
+          end
+        end
+
+        stream << "event:\"#{reg_num}\""
+
+        price = DB.get "event:#{reg_num}:price"
+        stream << ", price:\"#{price}\""
+
+        desc = DB.get "event:#{reg_num}:desc"
+        stream << ", desc:\"#{desc}\""
+      end
     end
   end
 
