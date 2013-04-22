@@ -50,6 +50,7 @@ Albatross.prototype.setUp = function setUp(){
 
 function Albatross(){
   this.setUp();
+  // this.getFormData();
   return this.init({
     button: $('#reg_button'),
     container: $('#response_container')
