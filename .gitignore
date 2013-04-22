@@ -1,8 +1,8 @@
+.rbx
 *.gem
 *.rbc
 .bundle
 .config
-.rvmrc
 coverage
 InstalledFiles
 lib/bundler/man
@@ -12,6 +12,12 @@ spec/reports
 test/tmp
 test/version_tmp
 tmp
+log
+
+# RVM files
+.rvmrc
+.ruby-version
+.ruby-gemset
 
 # YARD artifacts
 .yardoc
