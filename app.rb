@@ -63,7 +63,7 @@ class App < E
 
       DB.incr :connections
 
-      EM.add_timer(1) do
+      EM.synchrony do
         DB.lpush "event:#{event_num}:registrations", name
         stream << "event_num: #{event_num}"
       end
