@@ -14,7 +14,7 @@ events = []
 7.times do |i|
 	i+=1
 	limit = 100 * 10**i
-	events << {id:i, limit: limit, desc:"event #{i} with limit of #{limit}", price:limit/100 }
+	events << {id:i, limit: limit, desc:"event #{i} with limit of #{limit}", price:limit/100, issued: 0 }
 end
 
 DB = Redis.new

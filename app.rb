@@ -29,7 +29,7 @@ class App < E
 
       DB.incr :connections
 
-      EM.add_timer(1) do
+      EM.synchrony do
         reg_num = 1
         event_num = 0
         while event_num == 0

@@ -10,6 +10,8 @@ GEM
     e (0.4.5)
       rack (~> 1.5)
       tilt (~> 1.3)
+    em-synchrony (1.0.3)
+      eventmachine (>= 1.0.0.beta.1)
     eventmachine (1.0.3)
     highline (1.6.16)
     hiredis (0.4.5)
@@ -40,6 +42,7 @@ PLATFORMS
 DEPENDENCIES
   capistrano
   e
+  em-synchrony
   eventmachine
   hiredis
   rainbows
