@@ -29,7 +29,7 @@ class App < E
 
       DB.incr :connections
 
-      EM.synchrony do
+#      EM.synchrony do
         reg_num = 1
         event_num = 0
         while event_num == 0
@@ -50,7 +50,7 @@ class App < E
 
         desc = DB.get "event:#{reg_num}:desc"
         stream << ", desc:\"#{desc}\""
-      end
+#      end
     end
   end
 
