@@ -1,4 +1,6 @@
 require 'bundler/setup'
+require "em-synchrony"
+require "em-http-request"
 Bundler.require
 
 EventMachine.set_max_timers 1_250_000
