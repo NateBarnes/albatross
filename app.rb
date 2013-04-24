@@ -40,7 +40,7 @@ class App < E
           else
             event_num = reg_num
             DB.incr "event:#{reg_num}:issued"
-            reservation_num = DB.inc(:reservations)
+            reservation_num = DB.incr(:reservations)
             DB.set("reservation:#{reservation_num}", event_num)
             DB.expire("reservation:#{reservation_num}", 600)
           end
