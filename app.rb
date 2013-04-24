@@ -29,7 +29,7 @@ class App < E
 
       DB.incr :connections
 
-#      EM.synchrony do
+      EM.add_timer(1) do
         reg_num = 1
         event_num = 0
         while event_num == 0
@@ -40,21 +40,24 @@ class App < E
           else
             event_num = reg_num
             DB.incr "event:#{reg_num}:issued"
+            reservation_num = DB.inc(:reservations)
+            DB.set("reservation:#{reservation_num}", event_num)
+            DB.expire("reservation:#{reservation_num}", 600)
           end
         end
 
         stream << "event:\"#{reg_num}\""
 
-        price = DB.get "event:#{reg_num}:price"
-        stream << ", price:\"#{price}\""
+        price_call = EM::HttpRequest.new("http://www.example.com").get
+        price_call.callback { stream << ", price:\"#{DB.get("event:#{reg_num}:price")}\"" }
 
-        desc = DB.get "event:#{reg_num}:desc"
-        stream << ", desc:\"#{desc}\""
-#      end
+        desc_call = EM::HttpRequest.new("http://www.example.com").get
+        desc_call.callback { stream << ", desc:\"#{DB.get("event:#{reg_num}:desc")}\"" }
+      end
     end
   end
 
-  def register event_num, name="test_name"
+  def register reservation_num, aus_id
     stream :keep_open do |stream|
 
       stream.errback do
@@ -63,9 +66,12 @@ class App < E
 
       DB.incr :connections
 
-      EM.synchrony do
-        DB.lpush "event:#{event_num}:registrations", name
-        stream << "event_num: #{event_num}"
+      EM.add_timer(1) do
+        event_num = DB.get("reservation:#{reservation_num}")
+        if event_num
+          DB.lpush "event:#{event_num}:registrations", aus_id
+          stream << "event_num: #{event_num}"
+        end
       end
     end
   end
